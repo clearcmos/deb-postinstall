@@ -117,7 +117,7 @@ if ! command -v python3 &>/dev/null; then
 fi
 
 # Check if repository already exists
-REPO_DIR="debian"
+REPO_DIR="deb-postinstall"
 if [ -d "$REPO_DIR" ]; then
     status_msg "Repository already exists, updating instead of cloning..."
     cd "$REPO_DIR" && git pull >/dev/null 2>&1
