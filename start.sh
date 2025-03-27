@@ -124,7 +124,7 @@ if [ -d "$REPO_DIR" ]; then
     success_msg "Repository updated"
 else
     status_msg "Cloning repository..."
-    git clone https://github.com/clear-cmos/deb-postinstall.git "$REPO_DIR" >/dev/null 2>&1
+    git clone https://github.com/clearcmos/deb-postinstall.git "$REPO_DIR" >/dev/null 2>&1
     cd "$REPO_DIR"
     success_msg "Repository cloned"
 fi
