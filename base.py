@@ -1486,6 +1486,45 @@ Unattended-Upgrade::Automatic-Reboot "false";
             else:
                 logger.info(f"You can now connect to this server using: {green(f'ssh {self.current_non_root_user}@hostname')}", {'color': True})
 
+            # Create automount service for network shares
+            logger.info("Creating automount service for network shares...")
+            automount_service = """[Unit]
+Description=Dynamically check network mounts and automount on start
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStartPre=/bin/sleep 15
+ExecStart=/bin/bash -c 'hosts=$(grep -E "^[^#].*cifs|nfs" /etc/fstab | grep -oE "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+|[a-zA-Z0-9.-]+\\.(com|org|net|local|home|arpa)" | sort -u); for host in $hosts; do for i in {1..10}; do ping -c 1 $host && break || (echo "Waiting for $host..." && sleep 3); done; done; mount -a'
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target"""
+
+            # Make sure we have appropriate permissions to create the service file
+            if os.geteuid() != 0:
+                logger.info(f"{yellow('Creating systemd service requires root privileges. Attempting with sudo...')}", {'color': True})
+                # Create a temporary file
+                with open("/tmp/automount-on-start.service", "w") as f:
+                    f.write(automount_service)
+                # Use sudo to move it to the right location
+                self.run_command("sudo mv /tmp/automount-on-start.service /etc/systemd/system/", shell=True)
+                self.run_command("sudo chmod 644 /etc/systemd/system/automount-on-start.service", shell=True)
+                # Enable and start the service with sudo
+                self.run_command("sudo systemctl enable automount-on-start.service", shell=True)
+                self.run_command("sudo systemctl start automount-on-start.service", shell=True)
+            else:
+                # Running as root, we can create the file directly
+                with open("/etc/systemd/system/automount-on-start.service", "w") as f:
+                    f.write(automount_service)
+                os.chmod("/etc/systemd/system/automount-on-start.service", 0o644)
+                # Enable and start the service
+                self.run_command("systemctl enable automount-on-start.service", shell=True)
+                self.run_command("systemctl start automount-on-start.service", shell=True)
+            
+            logger.info(f"{green('Automount service created, enabled, and started')}", {'color': True})
+            
             # Reload systemd
             self.run_command("systemctl daemon-reload", shell=True)
 
