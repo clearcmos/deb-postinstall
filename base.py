@@ -1495,7 +1495,7 @@ Wants=network-online.target
 
 [Service]
 ExecStartPre=/bin/sleep 15
-ExecStart=/bin/bash -c 'hosts=$(grep -E "^[^#].*cifs|nfs" /etc/fstab | grep -oE "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+|[a-zA-Z0-9.-]+\\.(com|org|net|local|home|arpa)" | sort -u); for host in $hosts; do for i in {1..10}; do ping -c 1 $host && break || (echo "Waiting for $host..." && sleep 3); done; done; mount -a'
+ExecStart=/bin/bash -c 'hosts=$(grep -E "^[^#].*cifs|nfs" /etc/fstab | grep -oE "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+|[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]|[a-zA-Z0-9.-]+\\.(com|org|net|local|home|arpa)" | sort -u); for host in $hosts; do for i in {1..10}; do ping -c 1 $host && break || (echo "Waiting for $host..." && sleep 3); done; done; mount -a'
 Type=oneshot
 RemainAfterExit=yes
 
